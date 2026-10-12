@@ -26,7 +26,17 @@ const NewIssuePage = () => {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const onSubmit = handleSubmit(async (data) => {
+        try {
+          setIsSubmitting(true);
+          await axios.post('/api/issues', data);
+          router.push('/issues');
+        } catch (error) {
+          setIsSubmitting(false);
+          setError('Failed to create issue. Please try again.');
+        }
+    });
+  
   return (
     <div className='max-w-xl'>
       {error && <Callout.Root color="red" className='mb-5'>
@@ -36,18 +46,8 @@ const NewIssuePage = () => {
     
     <form 
       className='space-y-3' 
-      onSubmit={handleSubmit(async (data) => {
-        try {
-          setIsSubmitting(true);
-          await axios.post('/api/issues', data);
-          router.push('/issues');
-        } catch (error) {
-          setIsSubmitting(false);
-          setError('Failed to create issue. Please try again.');
-        }
-
-       
-      })}>
+      onSubmit={onSubmit}
+      >
         <TextFieldRoot>
             <TextFieldInput placeholder="Title" {...register('title')} />
         </TextFieldRoot>
