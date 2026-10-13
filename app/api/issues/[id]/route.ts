@@ -39,8 +39,8 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
 
-     const { id } = await params;
-   const issue = await prisma.issue.findUnique({
+    const { id } = await params;
+    const issue = await prisma.issue.findUnique({
         where: {
             id: parseInt(id)
         }
