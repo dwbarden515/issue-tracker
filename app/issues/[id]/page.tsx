@@ -1,6 +1,7 @@
 import prisma from '@/prisma/client'
 import { Box, Flex, Grid } from '@radix-ui/themes'
 import { notFound } from 'next/navigation'
+import { auth } from '@/auth'
 import EditIssueButton from './EditIssueButton'
 import IssueDetails from './IssueDetails'
 import DeleteIssueButton from './DeleteIssueButton'
@@ -23,18 +24,21 @@ const IssueDetailPage = async ({ params }: Props) => {
   if (!issue) 
     notFound();
 
-  
+  const session = await auth()
+
     return (
     <Grid columns={{initial:"1", sm:"5"}} gap="5">
       <Box className='md:col-span-4'>
         <IssueDetails issue={issue} />
         </Box>
-        <Box>
+        {session && (
+          <Box>
           <Flex direction="column" gap="4">
             <EditIssueButton issueId={issue.id} />
             <DeleteIssueButton issueId={issue.id} />
           </Flex>
         </Box>
+        )}
     </Grid>
   )
 }
