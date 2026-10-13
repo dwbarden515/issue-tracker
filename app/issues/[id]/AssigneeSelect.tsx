@@ -1,9 +1,10 @@
 'use client';
 
 import type { User } from '@prisma/client';
-import { Select, Text } from '@radix-ui/themes';
+import { Select } from '@radix-ui/themes';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {Skeleton} from '@/app/components';
 
 type AssigneeOption = Pick<User, 'id' | 'name' | 'email'>;
 
@@ -12,29 +13,22 @@ const AssigneeSelect = () => {
   // @ts-expect-error placeholder is supported by the Select.Trigger implementation.
   const trigger = <Select.Trigger placeholder='Assign...' />;
 
-  const [users, setUsers] = useState<AssigneeOption[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: users = [],
+    error,
+    isLoading,
+  } = useQuery<AssigneeOption[], Error>(
+    ['users'],
+    async () => {
+      const { data } = await axios.get<AssigneeOption[]>('/api/users');
+      return data;
+    },
+    { staleTime: 60_000, retry: 3 }
+  );
 
-  useEffect(() => {
-    let isCurrent = true;
+  if (isLoading) return <Skeleton />;
 
-    const fetchUsers = async () => {
-      try {
-        const { data } = await axios.get<AssigneeOption[]>('/api/users');
-        if (isCurrent) setUsers(data);
-      } catch {
-        if (isCurrent) setError('Unable to load users.');
-      } finally {
-        if (isCurrent) setIsLoading(false);
-      }
-    }
-
-    fetchUsers();
-    return () => {
-      isCurrent = false;
-    };
-  }, []);
+  if (error) return null;
 
   return (
     <Select.Root>
@@ -43,7 +37,7 @@ const AssigneeSelect = () => {
             <Select.Group>
                 <Select.Label>Suggestions</Select.Label>
                 {isLoading && <Select.Item value="loading" disabled>Loading users...</Select.Item>}
-                {error && <Select.Item value="error" disabled>{error}</Select.Item>}
+                {error && <Select.Item value="error" disabled>Unable to load users.</Select.Item>}
                 {!isLoading && !error && users.length === 0 && (
                   <Select.Item value="empty" disabled>No users available.</Select.Item>
                 )}
