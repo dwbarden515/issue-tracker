@@ -3,12 +3,19 @@
 import type { User } from '@prisma/client';
 import { Select } from '@radix-ui/themes';
 import axios from 'axios';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import {Skeleton} from '@/app/components';
 
 type AssigneeOption = Pick<User, 'id' | 'name' | 'email'>;
 
-const AssigneeSelect = () => {
+interface Props {
+  issueId: number;
+  assignedToUserId: string | null;
+}
+
+const AssigneeSelect = ({ issueId, assignedToUserId }: Props) => {
+  const router = useRouter();
   // Radix Themes 1.1.2 supports this at runtime but omits it from the prop type.
   // @ts-expect-error placeholder is supported by the Select.Trigger implementation.
   const trigger = <Select.Trigger placeholder='Assign...' />;
@@ -26,12 +33,22 @@ const AssigneeSelect = () => {
     { staleTime: 60_000, retry: 3 }
   );
 
+  const updateAssignee = useMutation(
+    (userId: string) => axios.patch(`/api/issues/${issueId}`, { assignedToUserId: userId }),
+    { onSuccess: () => router.refresh() }
+  );
+
   if (isLoading) return <Skeleton />;
 
   if (error) return null;
 
   return (
-    <Select.Root>
+    <>
+    <Select.Root
+      value={assignedToUserId ?? undefined}
+      onValueChange={(userId) => updateAssignee.mutate(userId)}
+      disabled={updateAssignee.isLoading}
+    >
         {trigger}
         <Select.Content>
             <Select.Group>
@@ -49,6 +66,8 @@ const AssigneeSelect = () => {
             </Select.Group>
         </Select.Content>
     </Select.Root>
+    {updateAssignee.isError && <p role="alert">Unable to update the assignee. Please try again.</p>}
+    </>
   )
 }
 
