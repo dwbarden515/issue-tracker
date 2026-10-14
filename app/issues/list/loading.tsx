@@ -1,5 +1,5 @@
 import { Skeleton } from '@/app/components'
-import { Table } from '@radix-ui/themes'
+import { Flex, Table } from '@radix-ui/themes'
 import IssueActions from './IssueActions'
 
 const LoadingIssuesPage = () => {
@@ -35,6 +35,13 @@ const LoadingIssuesPage = () => {
           ))}
         </Table.Body>
       </Table.Root>
+      <Flex align="center" gap="2" className="pt-8">
+        <Skeleton width={90} />
+        <Skeleton width={32} height={32} />
+        <Skeleton width={32} height={32} />
+        <Skeleton width={32} height={32} />
+        <Skeleton width={32} height={32} />
+      </Flex>
     </div>
   )
 }

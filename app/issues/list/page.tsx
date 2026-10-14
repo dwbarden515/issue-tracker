@@ -2,6 +2,7 @@ import prisma from '@/prisma/client';
 import { Table } from "@radix-ui/themes";
 import NextLink from 'next/link'
 import { IssueStatusBadge, Link } from '@/app/components'
+import Pagination from '@/app/components/Pagination';
 import IssueActions from './IssueActions';
 import { Status } from '@prisma/client';
 import { ArrowDownIcon, ArrowUpIcon } from '@radix-ui/react-icons';
@@ -26,10 +27,20 @@ const IssuesPage = async ({ searchParams }: { searchParams: Promise<Record<strin
   const orderBy = sortableFields.find((field) => field === requestedOrderBy) ?? 'createdAt';
   const requestedOrder = typeof params.order === 'string' ? params.order : undefined;
   const order = requestedOrder === 'desc' ? 'desc' : 'asc';
+  const requestedPage = typeof params.page === 'string' ? Number(params.page) : 1;
+  const pageSize = 5;
+  const where = status ? { status } : undefined;
+  const itemCount = await prisma.issue.count({ where });
+  const pageCount = Math.max(1, Math.ceil(itemCount / pageSize));
+  const currentPage = Number.isInteger(requestedPage) && requestedPage > 0
+    ? Math.min(requestedPage, pageCount)
+    : 1;
 
   const issues = await prisma.issue.findMany({
-    where: status ? { status } : undefined,
+    where,
     orderBy: { [orderBy]: order },
+    skip: (currentPage - 1) * pageSize,
+    take: pageSize,
   });
 
   return (
@@ -87,6 +98,11 @@ const IssuesPage = async ({ searchParams }: { searchParams: Promise<Record<strin
           ))}
         </Table.Body>
       </Table.Root>
+      <Pagination
+        itemCount={itemCount}
+        pageSize={pageSize}
+        currentPage={currentPage}
+      />
     </div>
   )
 }
