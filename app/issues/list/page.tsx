@@ -1,21 +1,22 @@
-import prisma from '@/prisma/client';
-import { Table } from "@radix-ui/themes";
-import NextLink from 'next/link'
-import { IssueStatusBadge, Link } from '@/app/components'
+import { IssueStatusBadge, Link } from '@/app/components';
 import Pagination from '@/app/components/Pagination';
-import IssueActions from './IssueActions';
+import prisma from '@/prisma/client';
 import { Status } from '@prisma/client';
 import { ArrowDownIcon, ArrowUpIcon } from '@radix-ui/react-icons';
+import { Table } from "@radix-ui/themes";
+import { Metadata } from 'next';
+import NextLink from 'next/link';
+import IssueActions from './IssueActions';
 
 const columns: {
   label: string;
   value: 'title' | 'status' | 'createdAt';
   className?: string;
 }[] = [
-  { label: 'Issue', value: 'title' },
-  { label: 'Status', value: 'status', className: 'hidden md:table-cell' },
-  { label: 'Created', value: 'createdAt', className: 'hidden md:table-cell' },
-];
+    { label: 'Issue', value: 'title' },
+    { label: 'Status', value: 'status', className: 'hidden md:table-cell' },
+    { label: 'Created', value: 'createdAt', className: 'hidden md:table-cell' },
+  ];
 
 const sortableFields = columns.map(({ value }) => value);
 
@@ -110,3 +111,8 @@ const IssuesPage = async ({ searchParams }: { searchParams: Promise<Record<strin
 export const dynamic = 'force-dynamic';
 
 export default IssuesPage
+
+export const metadata: Metadata = {
+  title: 'Issue Tracker - Issue List',
+  description: 'View all project issues'
+}
