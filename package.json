@@ -47,6 +47,9 @@
     "@tailwindcss/typography": "^0.5.20"
   },
   "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.0": true,
+    "prisma@6.19.0": true,
     "prisma@5.3.1": true,
     "@prisma/engines@5.3.1": true,
     "unrs-resolver@1.12.2": true
