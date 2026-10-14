@@ -5,9 +5,11 @@ import { Select } from '@radix-ui/themes';
 import axios from 'axios';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {Skeleton} from '@/app/components';
 
 type AssigneeOption = Pick<User, 'id' | 'name' | 'email'>;
+const UNASSIGNED_VALUE = '__unassigned__';
 
 interface Props {
   issueId: number;
@@ -16,6 +18,14 @@ interface Props {
 
 const AssigneeSelect = ({ issueId, assignedToUserId }: Props) => {
   const router = useRouter();
+  const [selectedAssignee, setSelectedAssignee] = useState(
+    assignedToUserId ?? UNASSIGNED_VALUE
+  );
+
+  useEffect(() => {
+    setSelectedAssignee(assignedToUserId ?? UNASSIGNED_VALUE);
+  }, [assignedToUserId]);
+
   // Radix Themes 1.1.2 supports this at runtime but omits it from the prop type.
   // @ts-expect-error placeholder is supported by the Select.Trigger implementation.
   const trigger = <Select.Trigger placeholder='Assign...' />;
@@ -34,7 +44,9 @@ const AssigneeSelect = ({ issueId, assignedToUserId }: Props) => {
   );
 
   const updateAssignee = useMutation(
-    (userId: string) => axios.patch(`/api/issues/${issueId}`, { assignedToUserId: userId }),
+    (userId: string) => axios.patch(`/api/issues/${issueId}`, {
+      assignedToUserId: userId === UNASSIGNED_VALUE ? null : userId,
+    }),
     { onSuccess: () => router.refresh() }
   );
 
@@ -45,14 +57,20 @@ const AssigneeSelect = ({ issueId, assignedToUserId }: Props) => {
   return (
     <>
     <Select.Root
-      value={assignedToUserId ?? undefined}
-      onValueChange={(userId) => updateAssignee.mutate(userId)}
+      value={selectedAssignee}
+      onValueChange={(userId) => {
+        setSelectedAssignee(userId);
+        updateAssignee.mutate(userId, {
+          onError: () => setSelectedAssignee(assignedToUserId ?? UNASSIGNED_VALUE),
+        });
+      }}
       disabled={updateAssignee.isLoading}
     >
         {trigger}
         <Select.Content>
             <Select.Group>
                 <Select.Label>Suggestions</Select.Label>
+                <Select.Item value={UNASSIGNED_VALUE}>Unassigned</Select.Item>
                 {isLoading && <Select.Item value="loading" disabled>Loading users...</Select.Item>}
                 {error && <Select.Item value="error" disabled>Unable to load users.</Select.Item>}
                 {!isLoading && !error && users.length === 0 && (
